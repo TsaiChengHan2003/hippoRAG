@@ -84,6 +84,6 @@ HippoRAG 1-b31b1b"(https://arxiv.org/abs/2405.14831)
 export CUDA_VISIBLE_DEVICES=0,1
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HF_HOME=/datas/store162/chenghan/hf_home
-export OPENAI_API_KEY=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
+export 
 
 
