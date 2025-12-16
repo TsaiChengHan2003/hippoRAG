@@ -54,7 +54,6 @@ python main.py --dataset $dataset \
               --rerank_graph_mode true \
               --rerank_model_name ms-marco-MiniLM-L6-v2 \
               --rerank_threshold 0.5 \
-              --openie_mode offline
 
 # Run Labllama reproduce (在訓練之前 請先把llama在對應的ip開起來)
 python main.py --dataset $dataset \
@@ -84,6 +83,3 @@ HippoRAG 1-b31b1b"(https://arxiv.org/abs/2405.14831)
 export CUDA_VISIBLE_DEVICES=0,1
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HF_HOME=/datas/store162/chenghan/hf_home
-export 
-
-

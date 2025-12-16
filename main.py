@@ -8,7 +8,6 @@ from src.hipporag.utils.config_utils import BaseConfig
 import requests
 import datetime
 import argparse
-from countTokens import isEnoughTokens, countTokens
 
 # os.environ["LOG_LEVEL"] = "DEBUG"
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
