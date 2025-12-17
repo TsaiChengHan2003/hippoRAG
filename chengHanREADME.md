@@ -53,7 +53,7 @@ python main.py --dataset $dataset \
               --embedding_name nvidia/NV-Embed-v2 \
               --rerank_graph_mode true \
               --rerank_model_name ms-marco-MiniLM-L6-v2 \
-              --rerank_threshold 0.5 \
+              --rerank_threshold 0.5
 
 # Run Labllama reproduce (在訓練之前 請先把llama在對應的ip開起來)
 python main.py --dataset $dataset \

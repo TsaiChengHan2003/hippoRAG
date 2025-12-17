@@ -451,7 +451,9 @@ class HippoRAG:
             # print(">>> [DEBUG] sorted_doc_scores:", sorted_doc_scores)
             
             if (self.global_config.rerank_graph_mode is not None):
-                retrieval_results_docs = [self.chunk_embedding_store.get_row(self.passage_node_keys[idx])["content"] for idx in sorted_doc_ids]
+                # 只對前 num_to_retrieve 個文檔進行 reranking，避免記憶體溢出
+                top_k_indices = sorted_doc_ids[:num_to_retrieve] if len(sorted_doc_ids) > num_to_retrieve else sorted_doc_ids
+                retrieval_results_docs = [self.chunk_embedding_store.get_row(self.passage_node_keys[idx])["content"] for idx in top_k_indices]
                 retrieval_results_docs = self.rerank_graph_search_results(query=query, retrieval_results_docs=retrieval_results_docs)
             
             # 若不打算reranking，則直接取前5個
@@ -1625,15 +1627,14 @@ class HippoRAG:
         return ppr_sorted_doc_ids, ppr_sorted_doc_scores
 
 
-    def rerank_graph_search_results(self,
-                                query: str,
-                                retrieval_results_docs) -> Tuple[np.ndarray, np.ndarray]:
+    def rerank_graph_search_results(self, query: str, retrieval_results_docs) -> Tuple[np.ndarray, np.ndarray]:
         scores = self.rerank_model.compute_scores(query=query, docs=retrieval_results_docs)
         rerank_docs = []
         
-        self.rerank_threshold = 0.5
+        # 使用配置中的 threshold
+        threshold = self.global_config.rerank_threshold if self.global_config.rerank_threshold is not None else 0.5
         for doc, score in zip(retrieval_results_docs, scores):
-            if score > self.rerank_threshold:
+            if score > threshold:
                 rerank_docs.append(doc)
         
         return rerank_docs

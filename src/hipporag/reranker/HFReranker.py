@@ -35,47 +35,30 @@ class HFReranker:
             
         return score
     
-    def compute_scores(self, query: str, docs: list) -> list:
+    def compute_scores(self, query: str, docs: list, batch_size: int = 32) -> list:
         """
-        [修正重點] 使用批次處理一次性計算所有文件的分數，大幅提升效能。
+        使用批次處理，避免記憶體溢出
         """
-        # 1. 準備批次輸入 (將 query 和所有 docs 配對)
-        # 建立一個列表，格式為 [[query, doc1], [query, doc2], ...]
-        texts = [[query, doc] for doc in docs]
-
-        # 2. Tokenizer 批次處理 (一次性處理所有配對)
-        inputs = self.tokenizer(
-            texts, 
-            padding=True, 
-            truncation=True, 
-            return_tensors='pt', 
-            max_length=512
-        )
+        all_scores = []
         
-        # 3. 推論 (一次 Forward Pass)
-        with torch.no_grad():
-            # 將輸入資料移動到模型所在的設備（例如 GPU/CPU）
-            # 假設 self.model.device 已定義
-            inputs = {k: v.to(self.model.device) for k, v in inputs.items()} 
-            outputs = self.model(**inputs)
+        # 分批處理文檔
+        for i in range(0, len(docs), batch_size):
+            batch_docs = docs[i:i+batch_size]
+            texts = [[query, doc] for doc in batch_docs]
             
-            # 4. 提取分數並轉換成 Python list
-            # outputs.logits 的形狀為 [批次大小, 1]
+            inputs = self.tokenizer(
+                texts, 
+                padding=True, 
+                truncation=True, 
+                return_tensors='pt', 
+                max_length=512
+            )
             
-            # --- 【 Sigmoid 歸一化核心步驟 】 ---
-            
-            # a. 應用 Sigmoid 函式
-            # Sigmoid(x) = 1 / (1 + e^(-x))，將數值範圍壓縮到 [0, 1]
-            sigmoid_scores = torch.sigmoid(outputs.logits)
-            
-            # b. 移動到 CPU，轉換為 NumPy 陣列，展平，再轉為 List
-            scores = sigmoid_scores.cpu().numpy().flatten().tolist()
-            
-            formatted_scores = [f"{s:.6f}" for s in scores]
-
-            # print(">>> [DEBUG] Normalized Sigmoid Scores:")
-            # print(formatted_scores)
-
-            # --- 【 步驟結束 】 ---
-            
-        return scores
+            with torch.no_grad():
+                inputs = {k: v.to(self.device) for k, v in inputs.items()} 
+                outputs = self.model(**inputs)
+                sigmoid_scores = torch.sigmoid(outputs.logits)
+                scores = sigmoid_scores.cpu().numpy().flatten().tolist()
+                all_scores.extend(scores)
+        
+        return all_scores
