@@ -14,6 +14,10 @@ class HFReranker:
             num_labels=1  # 回歸任務 (Regression) 或 二元分類的 Logits
         )
         self.model.eval() # 設定為評估模式
+        
+        # 3. 初始化設備並將模型移動到設備上
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = self.model.to(self.device)
 
     def compute_score(self, query, doc):
         # 3. 準備輸入 (Cross-Encoder 格式)
